@@ -13,7 +13,7 @@ services:
       - ./data:/app/data
     extra_hosts:
       - "host.docker.internal:host-gateway"
-  api:
+  sci-trainer:
     container_name: ml-pip-sci-trainer
     platform: linux/amd64
     build:
