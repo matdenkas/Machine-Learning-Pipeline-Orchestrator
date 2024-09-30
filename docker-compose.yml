@@ -1,0 +1,28 @@
+version: '3.8'
+services:
+  core:
+    container_name: ml-pipe-core
+    build:
+      context: .
+      dockerfile: Dockerfile.core
+    restart: always
+    command: ["tail", "-f", "/dev/null"]
+    platform: linux/amd64
+
+    volumes:
+      - ./data:/app/data
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+  api:
+    container_name: ml-pip-sci-trainer
+    platform: linux/amd64
+    build:
+      context: .
+      dockerfile: Dockerfile.sci-trainer
+    restart: always
+    command: ["tail", "-f", "/dev/null"]
+    volumes:
+      - ./data:/app/data
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+
