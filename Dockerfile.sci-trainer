@@ -14,7 +14,7 @@ ENV PYTHONUNBUFFERED 1
 WORKDIR /app
 
 # Copy the requirements.txt file to the Docker image
-COPY ./ml-pipe-core/requirements.txt .
+COPY ./ml-pipe-sci-trainer/requirements.txt .
 
 # Create a virtual environment and activate it
 RUN python3 -m venv ./venv/vsem
@@ -24,10 +24,7 @@ RUN /bin/bash -c "source ./venv/vsem/bin/activate"
 RUN pip install -r requirements.txt
 
 # Copy the source code from ./src to the Docker image
-COPY ./ml-pipe-core/src .
-
-# Copy the built front end into the container
-COPY ./ml-pipe-front/build ./build
+COPY ./ml-pipe-sci-trainer/src .
 
 # Set the work directory to SRC such that imports work correctly
 WORKDIR /app
