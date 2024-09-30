@@ -1,4 +1,5 @@
 cd ml-pipe-front
+npm install
 npm run build
 cd ..
 docker-compose build
