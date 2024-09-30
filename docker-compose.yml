@@ -16,12 +16,14 @@ services:
       - "host.docker.internal:host-gateway"
   sci-trainer:
     container_name: ml-pip-sci-trainer
-    platform: linux/amd64
     build:
       context: .
       dockerfile: Dockerfile.sci-trainer
     restart: always
-    command: ["tail", "-f", "/dev/null"]
+    command: ["fastapi", "dev", "./main.py", "--host", "0.0.0.0", "--port", "80"]
+    platform: linux/amd64
+    ports: 
+      - "8001:80"
     volumes:
       - ./data:/app/data
     extra_hosts:
