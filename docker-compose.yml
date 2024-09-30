@@ -15,7 +15,7 @@ services:
     extra_hosts:
       - "host.docker.internal:host-gateway"
   sci-trainer:
-    container_name: ml-pip-sci-trainer
+    container_name: ml-pipe-sci-trainer
     build:
       context: .
       dockerfile: Dockerfile.sci-trainer
