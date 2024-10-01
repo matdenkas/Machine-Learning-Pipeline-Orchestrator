@@ -6,7 +6,7 @@ from jobs import Job, Job_Manager
 
 app = FastAPI()
 SESSION_MANAGER = Session_Manager()
-JOB_MANAGER = Job_Manager()
+JOB_MANAGER = Job_Manager(SESSION_MANAGER)
 
 
 @app.get("/api")
