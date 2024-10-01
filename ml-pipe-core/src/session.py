@@ -31,6 +31,10 @@ class Session_Manager:
         self.session_registry[token] = session
         return token
 
+    def poll_session(self, token: str) -> 'Session_Status' | None:
+        session: Session | None = self.session_registry.get(token)
+        if session is None: return None
+        else: return session.status
     
     def __generate_session_token(self):
         return token_urlsafe(self.TOKEN_LENGTH)
