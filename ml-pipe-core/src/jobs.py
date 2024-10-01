@@ -52,7 +52,7 @@ class Dispatcher(threading.Thread):
         # if something is already holding it
         MIN_PORT = int(getenv('MIN_PORT'))
         MAX_PORT = int(getenv('MAX_PORT'))
-        self.__port_registry = [{port_number: False} for port_number in range(MIN_PORT, MAX_PORT + 1)]
+        self.__port_registry = {port_number: False for port_number in range(MIN_PORT, MAX_PORT + 1)}
 
         super().__init__(*args, **kwargs)
 
@@ -77,5 +77,18 @@ class Dispatcher(threading.Thread):
             except Empty:
                 pass
  
-    def __def_try_dispatch_job(job: Job, session_manager: Session_Manager) -> bool: 
+    def __def_try_dispatch_job(self, job: Job, session_manager: Session_Manager) -> bool: 
+
+        # Identify a valid port we can raise this container at
+        valid_port = None
+        for port, held in self.__port_registry:
+            if not held:
+                valid_port = port
+                self.__port_registry[port] = True # Mark this port as used
+
+        # If there are no valid ports we wont spin up a new container
+        # The job should be requeued
+        if valid_port is None: return None
+
+
         pass
