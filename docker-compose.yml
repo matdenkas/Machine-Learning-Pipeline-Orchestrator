@@ -6,6 +6,11 @@ services:
       context: .
       dockerfile: Dockerfile.core
     restart: always
+    env_file:
+      - .env
+    environment:
+      - MIN_PORT=${MIN_PORT}
+      - MAX_PORT=${MAX_PORT}
     command: ["fastapi", "dev", "./main.py", "--host", "0.0.0.0", "--port", "80"]
     platform: linux/amd64
     ports: 
