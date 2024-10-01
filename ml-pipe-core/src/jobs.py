@@ -16,6 +16,7 @@ import threading
 from queue import Queue, Empty
 from session import Session_Manager, Session_Status
 from os import getenv
+import docker
 
 JOB_QUEUE_SIZE = 200
 
@@ -48,6 +49,8 @@ class Dispatcher(threading.Thread):
         self.__queue = queue
         self.__session_manager = session_manager
         self.__stop_event = threading.Event()
+
+        self.__docker_client = docker.from_env()
 
         # The port registry holds what ports we are allowed to give out and 
         # if something is already holding it
@@ -91,5 +94,8 @@ class Dispatcher(threading.Thread):
         # The job should be requeued
         if valid_port is None: return None
 
+        self.__docker_client.containers.run("sci-trainer", ["fastapi", "dev", "./main.py", "--host", "0.0.0.0", "--port", "80"])
 
         pass
+
+
