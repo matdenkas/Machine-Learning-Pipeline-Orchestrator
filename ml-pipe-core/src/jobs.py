@@ -38,6 +38,7 @@ class Job_Manager:
         self.__dispatcher.join()
 
     def queue_job(self, job: Job):
+        self.__session_manager.get(job.session_token).status = Session_Status.PENDING_AVAILABLE_TRAINER
         self.__job_queue.put(job)
 
 
