@@ -15,6 +15,7 @@ from pydantic import BaseModel
 import threading
 from queue import Queue, Empty
 from session import Session_Manager, Session_Status
+from os import getenv
 
 JOB_QUEUE_SIZE = 200
 
@@ -32,7 +33,7 @@ class Job_Manager:
         self.__dispatcher  = Dispatcher(self.__job_queue, self.__session_manager).start()
 
     def __del__(self):
-        self.__job_queue.all_tasks_done()
+        self.__job_queue.join()
         self.__dispatcher.stop()
         self.__dispatcher.join()
 
@@ -46,6 +47,13 @@ class Dispatcher(threading.Thread):
         self.__queue = queue
         self.__session_manager = session_manager
         self.__stop_event = threading.Event()
+
+        # The port registry holds what ports we are allowed to give out and 
+        # if something is already holding it
+        MIN_PORT = int(getenv('MIN_PORT'))
+        MAX_PORT = int(getenv('MAX_PORT'))
+        self.__port_registry = [{port_number: False} for port_number in range(MIN_PORT, MAX_PORT + 1)]
+
         super().__init__(*args, **kwargs)
 
 
