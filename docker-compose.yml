@@ -15,7 +15,7 @@ services:
     ports: 
       - "8000:80"
     volumes:
-      - ./data:/app/data
+      - /var/run/docker.sock:/var/run/docker.sock # This is required to hit our docker engine from inside the container
     extra_hosts:
       - "host.docker.internal:host-gateway"
   sci-trainer:
@@ -23,13 +23,9 @@ services:
     build:
       context: .
       dockerfile: Dockerfile.sci-trainer
-    restart: always
-    command: ["fastapi", "dev", "./main.py", "--host", "0.0.0.0", "--port", "80"]
     platform: linux/amd64
     ports: 
       - "8001:80"
-    volumes:
-      - ./data:/app/data
     extra_hosts:
       - "host.docker.internal:host-gateway"
 

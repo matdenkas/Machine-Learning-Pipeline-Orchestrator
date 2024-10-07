@@ -8,7 +8,8 @@ app = FastAPI()
 SESSION_MANAGER = Session_Manager()
 JOB_MANAGER = Job_Manager(SESSION_MANAGER)
 
-
+import docker
+docker.from_env()
 @app.get("/api")
 async def root():
     return {"message": "Hello World"}
@@ -23,7 +24,7 @@ async def post_job(job: Job):
 
 @app.get('/api/pollstatus/token={token}')
 async def poll_status(token: str):
-    status = SESSION_MANAGER.poll_session(token)
+    status = SESSION_MANAGER.poll_session_status(token)
     return {"status": status}
 
 
