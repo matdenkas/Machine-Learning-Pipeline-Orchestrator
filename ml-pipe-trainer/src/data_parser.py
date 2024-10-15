@@ -18,7 +18,7 @@ def cross_validation(df: DataFrame, dataset_information: dict):
 
 
 def get_XY(df, target_features):
-        y = np.array(df[target_features])
-        X = np.array(df.drop(target_features, axis=1))
+    y = np.array(df[target_features])
+    X = np.array(df.drop(target_features, axis=1))
 
-        return X, y
+    return X, y

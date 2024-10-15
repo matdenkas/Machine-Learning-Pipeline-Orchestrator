@@ -21,7 +21,9 @@ class ModelTrainer():
         # NOTE:: Need to figure out what to do with these evaluation metrics.
         # I'm thinking a pandas df with a column for each metric. Will need to 
         # be visualized in some way on the frontend
-        model_framework.evaluate(dataset)
+        score = model_framework.evaluate(dataset)
+
+        return score
 
 
     def build_model(self):
@@ -79,5 +81,4 @@ class SKLearnTrainer():
         # NOTE:: This evaluates the model based on a pre-defined metric.
         # Would be better to make predictions and evaluate based on a chosen metric.
         # This is just the most simple solution for now.
-        self.model.score(X_test, y_test)
-
+        return self.model.score(X_test, y_test)
