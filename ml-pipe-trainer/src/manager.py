@@ -18,6 +18,7 @@ def train_models(model_specifications: dict, df_dataset: DataFrame):
         performance_metrics = {}
 
         performance_metrics['model_id'] = model_specification['id']
+        
         model_trainer = ModelTrainer(model_specification, df_dataset)
 
         score = model_trainer.train_model()
