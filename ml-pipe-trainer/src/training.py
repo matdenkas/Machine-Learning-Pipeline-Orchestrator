@@ -18,9 +18,6 @@ class ModelTrainer():
 
         model_framework.train(dataset)
 
-        # NOTE:: Need to figure out what to do with these evaluation metrics.
-        # I'm thinking a pandas df with a column for each metric. Will need to 
-        # be visualized in some way on the frontend
         score = model_framework.evaluate(dataset)
 
         return score
