@@ -17,7 +17,7 @@ import pandas as pd
 class IPreprocessing(ABC):
     @abstractmethod
     def preprocess_data(self, preprocessing_task_request: dict, df: pd.DataFrame) -> pd.DataFrame:
-        """Abstract method to define the post-processing operation.
+        """Abstract method to define the preprocessing operation.
 
         Args:
             preprocessing_task (dict): The type of preprocessing the dataset requires. Located in the preprocessingTasks 
@@ -66,7 +66,7 @@ def preprocessing_factory(preprocessing_task_name: str) -> IPreprocessing :
         ImportError: An error will appear when something is wrong with the import
 
     Returns:
-        PostProcessing:  Instance of the preprocessing class.
+        Preprocessing:  Instance of the preprocessing class.
     """
     try:
         MODULE_NAME = 'src'
