@@ -94,7 +94,7 @@ class Dispatcher(threading.Thread):
         # The job should be requeued
         if valid_port is None: return None
 
-        self.__docker_client.containers.run("sci-trainer", ["fastapi", "dev", "./main.py", "--host", "0.0.0.0", "--port", "80"])
+        self.__docker_client.containers.run("trainer", ["fastapi", "dev", "./main.py", "--host", "0.0.0.0", "--port", "80"])
 
         pass
 
