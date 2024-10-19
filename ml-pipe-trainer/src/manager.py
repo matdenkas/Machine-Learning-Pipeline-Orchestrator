@@ -1,27 +1,41 @@
 from pandas import DataFrame
 
-from training import ModelTrainer
+from src.preprocessing import preprocessing_factory
+from src.training import TrainingManager
 
 def run_pipeline(df_dataset: DataFrame, job_specification: dict):
-    # Preprocessing would go here
+    preprocessing_tasks = job_specification['preprocessingTasks']
 
-    model_specifications = job_specification['modelSpecifications']
+    df_dataset = preprocess_data(preprocessing_tasks, df_dataset)
 
-    df_performance_metrics = train_models(model_specifications, df_dataset)
+    model_definitions = job_specification['modelDefinitions']
+
+    df_performance_metrics = train_models(model_definitions, df_dataset)
 
     return df_performance_metrics
 
 
-def train_models(model_specifications: dict, df_dataset: DataFrame):
+def preprocess_data(preprocessing_tasks: list, df_dataset: DataFrame):
+    if preprocessing_tasks is None:
+        return df_dataset
+    
+    for preprocessing_task_request in preprocessing_tasks:
+        preprocessing_class = preprocessing_factory(preprocessing_task_request['task'])
+        df_dataset = preprocessing_class.preprocess_data(preprocessing_task_request, df_dataset)
+
+    return df_dataset
+
+
+def train_models(model_definitions: list, df_dataset: DataFrame):
     all_performance_metrics = []
-    for model_specification in model_specifications:
+    for model_definition in model_definitions:
         performance_metrics = {}
 
-        performance_metrics['model_id'] = model_specification['id']
+        performance_metrics['model_id'] = model_definition['id']
         
-        model_trainer = ModelTrainer(model_specification, df_dataset)
+        training_manager = TrainingManager(model_definition, df_dataset)
 
-        score = model_trainer.train_model()
+        score = training_manager.train_model()
 
         performance_metrics['score'] = score
 
