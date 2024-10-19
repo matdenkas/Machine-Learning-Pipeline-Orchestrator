@@ -1,72 +1,124 @@
+from abc import ABC, abstractmethod
 from importlib import import_module
 from pandas import DataFrame
+from pickle import dumps
 
-from data_parser import cross_validation, get_XY
+from src.data_parser import cross_validation, get_XY
 
-class ModelTrainer():
-    ml_framework_key = {'scikit-learn': 'SKLearnTrainer'}
+class TrainingManager():
+    ml_framework_dict = {'scikit-learn': 'SKLearnTrainer'}
 
-    def __init__(self, model_specification: dict, df_dataset: DataFrame):
-        self.model_specification = model_specification
+    def __init__(self, model_definition: dict, df_dataset: DataFrame):
+        self.model_definition = model_definition
         self.df_dataset = df_dataset
 
     
     def train_model(self):
-        model_framework = self.build_model()
+        model_trainer = self.build_model()
 
-        dataset = cross_validation(self.df_dataset, self.model_specification['crossValidation'])
+        dataset = cross_validation(self.df_dataset, self.model_definition['crossValidation'])
 
-        model_framework.train(dataset)
+        model_trainer.train(dataset)
 
-        score = model_framework.evaluate(dataset)
+        score = model_trainer.evaluate(dataset)
+
+        #model_weights = model_trainer.get_model_weights()
 
         return score
 
 
     def build_model(self):
-        model_framework = self.ml_framework_factory(self.model_specification.ml_framework, 
-                                          self.model_specification.model_algorithm, 
-                                          self.model_specification.prediction_problem, 
-                                          self.model_specification.model_params)
+        ml_framework = self.ml_framework_dict[self.model_definition['mlFramework']]
 
-        model_framework.build()
+        model_trainer = model_trainer_factory(ml_framework, self.model_definition)
+
+        model_trainer.build()
+
+        return model_trainer
 
 
-        return model_framework
+class IModelTrainer(ABC):
+    @abstractmethod
+    def __init__(self, model_definition: dict):
+        """Abstract method to define the machine learning (ML) model trainer. Model trainers
+        are wrappers around existing python ML libraries/frameworks
 
+        Args:
+            model_definition (dict): Dictionary holding information about model
+
+        Raises:
+            NotImplementedError: An error will appear when the function has not been implemented
+        """
+        raise NotImplementedError
     
-    def ml_framework_factory(self, ml_framework: str, model_algorithm: str, prediction_problem: str, model_params: dict):
-        ml_framework = self.ml_framework_key[ml_framework]
 
-        try:
-            return getattr(import_module(f'.{ml_framework}', 'training'), f'{ml_framework}')(model_algorithm, prediction_problem, model_params)
-        except ModuleNotFoundError:
-            raise ModuleNotFoundError(f'No module named {ml_framework} in training!')
+    @abstractmethod
+    def build(self):
+        """Abstract method to define the machine learning (ML) model build process
+
+        Raises:
+            NotImplementedError: An error will appear when the function has not been implemented
+        """
+        raise NotImplementedError
+    
+
+    @abstractmethod
+    def train(self, dataset: dict):
+        """Abstract method to define the machine learning (ML) model training process
+
+        Args:
+            dataset (dict): Dictionary containing the dataset to use for training/validation/testing
+
+        Raises:
+            NotImplementedError: An error will appear when the function has not been implemented
+        """
+        raise NotImplementedError
+    
+
+    @abstractmethod
+    def evaluate(self, dataset: dict):
+        """Abstract method to define the machine learning (ML) model evaluation process
+
+        Args:
+            dataset (dict): Dictionary containing the dataset to use for training/validation/testing
+
+        Raises:
+            NotImplementedError: An error will appear when the function has not been implemented
+        """
+        raise NotImplementedError
 
 
 class SKLearnTrainer():
-    ml_algorithm_key = {'Random Forest': {'regression': 'RandomForestRegressor', 'classification': 'RandomForestClassifier'}}
 
-    def __init__(self, model_algorithm: str, prediction_problem: str, model_params: dict):
-        self.model_algorithm = model_algorithm
-        self.prediction_problem = prediction_problem
-        self.model_params = model_params
+    ml_algorithm_key = {'Random Forest': {'regression': 'RandomForestRegressor', 'classification': 'RandomForestClassifier', 'class': 'ensemble'},
+                        'MLP': {'regression': 'MLPRegressor', 'classification': 'MLPClassifier', 'class': 'neural_network'}
+                        }
+
+    def __init__(self, model_definition: dict):
+        self.model_definition = model_definition
         self.model = None
 
 
     def build(self):
-        sklearn_ensemble = self.ml_algorithm_key[self.model_algorithm][self.prediction_problem]
-        self.model = getattr(import_module(f'.ensemble', 'sklearn'), sklearn_ensemble)(self.model_params)
+        model_algorithm = self.model_definition['mlAlgorithm']
+        prediction_problem = self.model_definition['predictionProblem']
+        model_params = self.model_definition['modelParams']
+
+        sklearn_model = self.ml_algorithm_key[model_algorithm][prediction_problem]
+        sklearn_model_class = self.ml_algorithm_key[model_algorithm]['class']
+        self.model = getattr(import_module(f'.{sklearn_model_class}', 'sklearn'), sklearn_model)(**model_params)
     
 
     def train(self, dataset):
-        X_train, y_train = get_XY(dataset['training'])
+        target_features = self.model_definition['target']
+        X_train, y_train = get_XY(dataset['training'], target_features)
 
         self.model.fit(X_train, y_train)
 
     
     def evaluate(self, dataset):
-        X_test, y_test = get_XY(dataset['testing'])
+        target_features = self.model_definition['target']
+        X_test, y_test = get_XY(dataset['testing'], target_features)
 
         '''
         if self.prediction_problem == 'regression':
@@ -79,3 +131,16 @@ class SKLearnTrainer():
         # Would be better to make predictions and evaluate based on a chosen metric.
         # This is just the most simple solution for now.
         return self.model.score(X_test, y_test)
+    
+
+    def get_model_weights(self):
+        model_weights = dumps(self.model)
+        return model_weights
+    
+
+def model_trainer_factory(ml_framework: str, model_definition: dict):
+    try:
+        MODULE_NAME = 'src'
+        return getattr(import_module(f'.training', MODULE_NAME), f'{ml_framework}')(model_definition)
+    except ModuleNotFoundError:
+        raise ModuleNotFoundError(f'No module named {ml_framework} in {MODULE_NAME}!')
