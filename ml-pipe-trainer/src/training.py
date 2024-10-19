@@ -1,9 +1,23 @@
+# -*- coding: utf-8 -*-
+#----------------------------------
+# Created By : Beto Estrada
+# Created Date: 10/18/2024
+# version 1.0
+#----------------------------------
+""" This file contains logic and data structures
+for a TrainingManager, which initiates the training process,
+and ModelTrainers which train the models utilizing a specified
+machine learning (ML) library / framework.
+ """ 
+#----------------------------------
+# 
+#
 from abc import ABC, abstractmethod
 from importlib import import_module
 from pandas import DataFrame
 from pickle import dumps
 
-from src.data_parser import cross_validation, get_XY
+from src.data_manipulation import cross_validation, get_XY
 
 class TrainingManager():
     ml_framework_dict = {'scikit-learn': 'SKLearnTrainer'}

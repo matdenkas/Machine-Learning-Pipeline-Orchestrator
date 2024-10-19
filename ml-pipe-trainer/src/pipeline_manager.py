@@ -1,3 +1,15 @@
+# -*- coding: utf-8 -*-
+#----------------------------------
+# Created By : Beto Estrada
+# Created Date: 10/18/2024
+# version 1.0
+#----------------------------------
+""" This file contains logic for managing the different machine
+learning (ML) pipeline steps.
+ """ 
+#----------------------------------
+# 
+#
 from pandas import DataFrame
 
 from src.preprocessing import preprocessing_factory

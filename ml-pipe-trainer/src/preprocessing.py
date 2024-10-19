@@ -1,3 +1,15 @@
+# -*- coding: utf-8 -*-
+#----------------------------------
+# Created By : Beto Estrada
+# Created Date: 10/18/2024
+# version 1.0
+#----------------------------------
+""" This file contains logic and data structures
+for preprocessing tasks
+ """ 
+#----------------------------------
+# 
+#
 from abc import ABC, abstractmethod
 from importlib import import_module
 import pandas as pd

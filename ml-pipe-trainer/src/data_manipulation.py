@@ -1,3 +1,15 @@
+# -*- coding: utf-8 -*-
+#----------------------------------
+# Created By : Beto Estrada
+# Created Date: 10/18/2024
+# version 1.0
+#----------------------------------
+""" This file contains logic for handling different
+data manipulation tasks.
+ """ 
+#----------------------------------
+# 
+#
 import numpy as np
 import pandas as pd
 from pandas import DataFrame

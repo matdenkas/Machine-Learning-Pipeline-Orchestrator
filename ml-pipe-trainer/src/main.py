@@ -1,9 +1,21 @@
+# -*- coding: utf-8 -*-
+#----------------------------------
+# Created By : Beto Estrada
+# Created Date: 10/18/2024
+# version 1.0
+#----------------------------------
+""" This file contains the different FastAPI routes
+for the trainer container.
+ """ 
+#----------------------------------
+# 
+#
 from fastapi import FastAPI, Form, UploadFile
 from io import BytesIO
 import json
 import pandas as pd
 
-from src.manager import run_pipeline
+from src.pipeline_manager import run_pipeline
 
 app = FastAPI()
 
