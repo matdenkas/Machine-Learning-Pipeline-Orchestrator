@@ -1,0 +1,20 @@
+{
+  "upload": {
+    "status": "File uploaded successfully",
+    "file_name": "data.csv"
+  },
+  "pipeline": {
+    "status": "Pipeline submitted",
+    "id": "pipeline_123"
+  },
+  "deploy": {
+    "status": "Pipeline deployed",
+    "id": "pipeline_123"
+  },
+  "jobs": {
+    "jobs": [
+      { "id": "job_001", "status": "running" },
+      { "id": "job_002", "status": "completed" }
+    ]
+  }
+}
