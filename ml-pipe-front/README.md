@@ -1,7 +1,4 @@
-**How to run**
-
-
-**ml-pipe-front**
+**How to run** **ml-pipe-front**
 
 **Build and Run:**
 
