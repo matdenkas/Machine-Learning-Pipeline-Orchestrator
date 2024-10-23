@@ -25,8 +25,12 @@ open your browser and check http://localhost:3000
 
 **To run locally**
 
+Navigate to the local ml-pipe-front folder and then follow the commands
+
 npm install 
 
 npm start
+
+![image](https://github.com/user-attachments/assets/e1749a65-2384-4230-92d9-4c2ad564e1fd)
 
 This will run the app in the development mode at http://localhost:3000
