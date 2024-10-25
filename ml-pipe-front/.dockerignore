@@ -1,0 +1,12 @@
+# Ignore node modules and dependencies
+node_modules
+
+
+# Ignore logs and temporary files
+*.log
+*.tmp
+
+# Ignore specific files and directories
+.env
+Dockerfile
+README.md
