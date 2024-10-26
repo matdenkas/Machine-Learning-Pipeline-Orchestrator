@@ -18,8 +18,8 @@ services:
       - /var/run/docker.sock:/var/run/docker.sock # This is required to hit our docker engine from inside the container
     extra_hosts:
       - "host.docker.internal:host-gateway"
-  sci-trainer:
-    container_name: ml-pipe-sci-trainer
+  trainer:
+    container_name: ml-pipe-trainer
     build:
       context: .
       dockerfile: Dockerfile.sci-trainer
