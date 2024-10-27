@@ -35,6 +35,25 @@ class Session_Manager:
         session: Session | None = self.session_registry.get(token)
         if session is None: return None
         else: return session.status.name
+
+
+    def get_worker_port(self, token: str) -> str | None:
+        session: Session | None = self.session_registry.get(token)
+        if session is None: 
+            return None
+        else:
+            session.status = Session_Status.TRAINING 
+            return session.worker_port
+        
+    def report_finished_training(self, token: str) -> None:
+        session: Session | None = self.session_registry.get(token)
+        if session is not None: 
+            session.status = Session_Status.PENDING_RESPONSE_FETCH 
+    
+    def report_terminated(self, token: str) -> None:
+        session: Session | None = self.session_registry.get(token)
+        if session is not None: 
+            session.status = Session_Status.FINISHED 
     
     def __generate_session_token(self):
         return token_urlsafe(self.TOKEN_LENGTH)
@@ -57,4 +76,5 @@ class Session_Status(Enum):
     PENDING_DATA_TRANSFER = 4
     TRAINING = 5
     PENDING_RESPONSE_FETCH = 6
+    FINISHED = 7
 

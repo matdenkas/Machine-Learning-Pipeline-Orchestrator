@@ -22,10 +22,9 @@ services:
     container_name: ml-pipe-trainer
     build:
       context: .
-      dockerfile: Dockerfile.sci-trainer
+      dockerfile: Dockerfile.trainer
     platform: linux/amd64
     ports: 
       - "8001:80"
     extra_hosts:
       - "host.docker.internal:host-gateway"
-

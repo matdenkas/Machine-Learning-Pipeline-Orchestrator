@@ -22,9 +22,11 @@ import requests
 JOB_QUEUE_SIZE = 200
 
 
-class Job(BaseModel):
-    session_token: str = None
-    job_spec: dict = None
+class Job:
+
+    def __init__(self, session_token: str, job_spec: any):
+        self.session_token = session_token
+        self.job_spec = job_spec
 
 
 class Job_Manager:
@@ -52,7 +54,8 @@ class Job_Manager:
         self.__overwatch.join()
 
     def queue_job(self, job: Job):
-        related_session: Session = self.__session_manager.session_registry[job.session_token]
+        related_session: Session | None = self.__session_manager.session_registry.get(job.session_token)
+        if related_session is None: return 
         related_session.status = Session_Status.PENDING_AVAILABLE_TRAINER
         self.__job_queue.put(job)
 
@@ -112,9 +115,10 @@ class Dispatcher(threading.Thread):
 
         # Start up a worker container
         self.__docker_client.containers.run(
-            image= "machine-learning-pipeline-orchestrator-sci-trainer:latest", 
+            image= "machine-learning-pipeline-orchestrator-trainer:latest", 
             command= ["fastapi", "dev", "./main.py", "--host", "0.0.0.0", "--port", "80"],
             ports= {80:valid_port},
+            name= related_session.token,
             detach= True
         )
 
@@ -130,6 +134,8 @@ class Overwatch(threading.Thread):
         self.__ROOT_WORKER_URL = str(getenv('ROOT_WORKER_URL'))
 
         self.__port_registry = port_registry
+
+        self.__docker_client = docker.from_env()
 
         super().__init__(*args, **kwargs)
 
@@ -160,10 +166,10 @@ class Overwatch(threading.Thread):
                 pass # We should never be able to hit this
             case Session_Status.PENDING_HEALTHY_RESPONSE:
 
-                health__check_url = worker_url
+                init_url = worker_url + '/init/'
                 response = None
                 try:
-                    response = requests.get(health__check_url)
+                    response = requests.post(init_url, json={'session_token': related_session.token})
                 except requests.exceptions.RequestException as e:  # This is the correct syntax
                     print(f'{e}\n\nPort: {related_session.worker_port} Token: {related_session.token}')
 
@@ -175,7 +181,7 @@ class Overwatch(threading.Thread):
 
                 response = None
                 try:
-                    response = requests.post(post_job_url, related_session.job)
+                    response = requests.post(post_job_url, json=related_session.job.job_spec)
                 except requests.exceptions.RequestException as e:  # This is the correct syntax
                     print(f'{e}\n\nPort: {related_session.worker_port} Token: {related_session.token}')
                 
@@ -185,8 +191,18 @@ class Overwatch(threading.Thread):
                 
             case Session_Status.PENDING_DATA_TRANSFER:
                 pass
+            case Session_Status.TRAINING:
+                pass
             case Session_Status.PENDING_RESPONSE_FETCH:
                 pass
+            case Session_Status.FINISHED:
+
+                self.__docker_client.containers.get(related_session.token).kill()
+
+
+                # free port
+                self.__port_registry[related_session.worker_port] = ''
+                related_session.worker_port = None
             case _:
                 raise NotImplementedError('related_session.status found in Overwatch__handel_active_worker')
 
