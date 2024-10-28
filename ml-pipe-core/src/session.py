@@ -77,4 +77,5 @@ class Session_Status(Enum):
     TRAINING = 5
     PENDING_RESPONSE_FETCH = 6
     FINISHED = 7
+    KILLED = 8
 

@@ -54,7 +54,7 @@ const RunJob = ({ jobSpecification, onBack }) => {
       send_data(); // Send the data to the trainer
     } else if (lastStatus == "PENDING_RESPONSE_FETCH") {
       get_results(); // Training has finished so fetch the results
-    } else if (lastStatus == "FINISHED") {
+    } else if (lastStatus == "FINISHED" || lastStatus == "KILLED") {
       clearInterval(pollingIntervalID); // We can stop talking to the backend now
     }
   }

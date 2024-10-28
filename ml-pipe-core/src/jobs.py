@@ -145,20 +145,26 @@ class Overwatch(threading.Thread):
 
     def run(self):
         while(True):
-            # Stop when we are told
-            if self.__stop_event.is_set():
-                break
-            
-            # If not look for active workers to manage
-            for _, session_token in self.__port_registry.items():
-                if session_token:
-                    self.__handel_active_worker(session_token)
+
+            try:
+                # Stop when we are told
+                if self.__stop_event.is_set():
+                    print("---OVERWATCH STOPPING---")
+                    break
+                
+                # If not look for active workers to manage
+                for _, session_token in self.__port_registry.items():
+                    if session_token:
+                        self.__handel_active_worker(session_token)
+
+            except Exception:
+                pass
                     
 
     def __handel_active_worker(self, session_token: str):
-
+        
         related_session: Session = self.__session_manager.session_registry[session_token]
-
+        
         worker_url = f'{self.__ROOT_WORKER_URL}:{related_session.worker_port}/api'
 
         match related_session.status:
@@ -199,10 +205,13 @@ class Overwatch(threading.Thread):
 
                 self.__docker_client.containers.get(related_session.token).kill()
 
-
                 # free port
                 self.__port_registry[related_session.worker_port] = ''
                 related_session.worker_port = None
+
+                related_session.status = Session_Status.KILLED
+            case Session_Status.KILLED:
+                pass
             case _:
                 raise NotImplementedError('related_session.status found in Overwatch__handel_active_worker')
 
