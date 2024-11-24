@@ -10,9 +10,9 @@ for the trainer container.
 #----------------------------------
 # 
 #
-from fastapi import FastAPI, UploadFile, Request
+from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
-from io import BytesIO, StringIO
+from io import StringIO
 import pandas as pd
 import requests
 
