@@ -114,7 +114,7 @@ const RunJob = ({ jobSpecification, dataFile, onBack }) => {
   };
 
   const get_results = () => {
-    fetch(`${BASE_URL}:${workerPort}/api/getresults`)
+    fetch(`${BASE_URL}:${workerPort}/api/getResults`)
       .then(response => response.json())
       .then(response => { 
         alert(`Training Results: ${JSON.stringify(response)}`); // This should be the results
