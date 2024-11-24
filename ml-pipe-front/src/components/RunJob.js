@@ -11,6 +11,8 @@ let pollingIntervalID = undefined;
 const RunJob = ({ jobSpecification, dataFile, onBack }) => {
   const [csvFile, setCsvFile] = useState(null); // Store the uploaded CSV file
 
+  jobSpec = jobSpecification
+
   const handleSubmitJob = () => {
     if (!dataFile) {
       alert('Please choose a CSV file before submitting the job!');
@@ -18,7 +20,6 @@ const RunJob = ({ jobSpecification, dataFile, onBack }) => {
     }
 
     // First, send job specification to backend
-    send_job();  // Job specification is sent in send_job function
     pollingIntervalID = setInterval(pollBackend, 2000);
   };
 
@@ -91,20 +92,16 @@ const RunJob = ({ jobSpecification, dataFile, onBack }) => {
         reader.onload = function(event) {
           // Append the CSV file content as text to the form data
           formData.append("data_file", event.target.result);
-          
+        
           // Send the request with multipart/form-data, including the file content as text
           fetch(`${BASE_URL}:${workerPort}/api/postData/`, {
             method: 'POST',
+            mode: 'no-cors',
             body: formData,
-          })
-            .then(response => response.json())
-            .then(response => {
-              alert(`Data posted: ${JSON.stringify(response)}`);
-            })
-            .catch(error => {
-              console.error('Error sending data:', error);
-              alert('Error sending data to the backend!');
-            });
+          }).catch(error => {
+            console.error('Error sending data:', error);
+            alert('Error sending data to the backend!');
+          });
         };
 
         // Read the CSV file as text
