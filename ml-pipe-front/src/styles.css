@@ -1,0 +1,125 @@
+/* Global resets */
+html, body, #root {
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: 'Arial', sans-serif;
+}
+
+h1, h2, h3, h4 {
+  text-align: center;
+}
+
+.container {
+  display: flex;
+  justify-content: space-between;
+  height: 100%;
+}
+
+.pipeline-designer, .run-job {
+  flex: 1;
+  padding: 20px;
+  border-radius: 8px;
+}
+
+textarea {
+  width: 100%;
+  height: 100px;
+  margin-top: 10px;
+  border-radius: 4px;
+  border: 1px solid #ccc;
+  padding: 10px;
+  font-family: monospace;
+}
+
+input[type="file"] {
+  margin-top: 10px;
+}
+
+button {
+  margin-top: 10px;
+  padding: 10px 15px;
+  border: none;
+  border-radius: 4px;
+  background-color: #007bff;
+  color: white;
+  cursor: pointer;
+}
+
+button:hover {
+  background-color: #0056b3;
+}
+
+select {
+  margin-top: 10px;
+  width: 100%;
+  padding: 8px;
+  border-radius: 4px;
+  border: 1px solid #ccc;
+}
+
+/* Styling for the logs panel */
+.logs-panel {
+  position: absolute;
+  top: 20%;
+  right: 10px;
+  width: 320px;
+  background-color: #f8f9fa;
+  padding: 15px;
+  box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
+  border-radius: 10px;
+  max-height: 500px;
+  overflow-y: auto;
+  border: 2px solid #007bff;
+}
+
+.logs-panel h3 {
+  font-size: 18px;
+  margin-bottom: 12px;
+  color: #007bff; /* Blue heading */
+  text-align: center;
+}
+
+.logs-message {
+  margin: 8px 0;
+  padding: 8px;
+  border-radius: 8px;
+  font-size: 14px;
+  word-wrap: break-word;
+}
+
+/* Info status - default logs color */
+.logs-message.info {
+  background-color: #e9ecef;
+  color: #333;
+}
+
+/* Success status - for success messages */
+.logs-message.success {
+  background-color: #d4edda;
+  color: #155724;
+  font-weight: bold;
+}
+
+/* Error status - for error messages */
+.logs-message.error {
+  background-color: #f8d7da;
+  color: #721c24;
+  font-weight: bold;
+}
+
+/* Warning status - for warning messages */
+.logs-message.warning {
+  background-color: #fff3cd;
+  color: #856404;
+}
+
+/* General message styling */
+.logs-message {
+  font-family: 'Courier New', Courier, monospace;
+  padding: 10px;
+  border-radius: 8px;
+  margin: 5px 0;
+}
