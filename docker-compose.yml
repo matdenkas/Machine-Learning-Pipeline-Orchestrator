@@ -1,0 +1,48 @@
+version: "3.9"
+
+services:
+  core:
+    container_name: ml-pipe-core
+    build:
+      context: .
+      dockerfile: Dockerfile.core
+    restart: always
+    env_file:
+      - .env
+    environment:
+      - MIN_PORT=${MIN_PORT}
+      - MAX_PORT=${MAX_PORT}
+    command: ["fastapi", "dev", "./main.py", "--host", "0.0.0.0", "--port", "80"]
+    platform: linux/amd64
+    ports: 
+      - "8000:80"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock  # This allows Portainer to manage Docker
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+
+  trainer:
+    container_name: ml-pipe-trainer
+    build:
+      context: .
+      dockerfile: Dockerfile.trainer
+    platform: linux/amd64
+    ports: 
+      - "8001:80"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+
+  portainer:
+    image: portainer/portainer-ce:latest
+    container_name: portainer
+    restart: always
+    environment:
+      - "DOCKER_API_VERSION=1.41"
+    ports:
+      - "9000:9000"  # Port to access Portainer UI
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock  # Gives Portainer access to Docker socket
+      - portainer_data:/data  # Persistent storage for Portainer data
+
+volumes:
+  portainer_data:
