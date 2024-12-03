@@ -21,6 +21,8 @@ const RunJob = ({ jobSpecification, dataFile, onBack }) => {
     setLogs((prevLogs) => [...prevLogs, { message, type }]);
   };
 
+  jobSpec = jobSpecification
+
   const handleSubmitJob = () => {
     if (!dataFile) {
       setFileError('Please choose a CSV file before submitting the job!');
@@ -101,6 +103,7 @@ const RunJob = ({ jobSpecification, dataFile, onBack }) => {
         reader.onload = function(event) {
           formData.append("data_file", event.target.result);
         
+          // Send the request with multipart/form-data, including the file content as text
           fetch(`${BASE_URL}:${workerPort}/api/postData/`, {
             method: 'POST',
             mode: 'no-cors',
@@ -120,7 +123,7 @@ const RunJob = ({ jobSpecification, dataFile, onBack }) => {
   };
 
   const get_results = () => {
-    fetch(`${BASE_URL}:${workerPort}/api/getresults`)
+    fetch(`${BASE_URL}:${workerPort}/api/getResults`)
       .then(response => response.json())
       .then(response => { 
         addLog(`Training Results: ${JSON.stringify(response)}`, "success");

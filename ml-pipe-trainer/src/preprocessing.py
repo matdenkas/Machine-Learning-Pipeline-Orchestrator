@@ -38,7 +38,10 @@ class Interpolation(IPreprocessing):
 
     def preprocess_data(self, preprocessing_task_request: dict, df: pd.DataFrame):
         args = preprocessing_task_request['args']
-        data_series_columns = preprocessing_task_request['dataSeries']
+
+        # Extract and removed 'dataSeries' from args. The remaining args will be
+        # passed directly to the interpolate function
+        data_series_columns = args.pop('dataSeries', None)
 
         df[data_series_columns] = df[data_series_columns].interpolate(**args)
 
