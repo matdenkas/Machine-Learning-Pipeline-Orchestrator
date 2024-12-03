@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import '../styles.css';  // Ensure the CSS is imported
 
 const BASE_URL = "http://localhost";
 const CORE_PORT = 8000;
@@ -10,45 +11,56 @@ let pollingIntervalID = undefined;
 
 const RunJob = ({ jobSpecification, dataFile, onBack }) => {
   const [csvFile, setCsvFile] = useState(null); // Store the uploaded CSV file
+  const [logs, setLogs] = useState([]); // Store logs to display in the UI
+  const [fileError, setFileError] = useState(""); // Track file selection errors
+
+  jobSpec = jobSpecification;
+
+  // Function to add logs to the UI with different log types
+  const addLog = (message, type = "info") => {
+    setLogs((prevLogs) => [...prevLogs, { message, type }]);
+  };
 
   jobSpec = jobSpecification
 
   const handleSubmitJob = () => {
     if (!dataFile) {
-      alert('Please choose a CSV file before submitting the job!');
+      setFileError('Please choose a CSV file before submitting the job!');
+      addLog('Please choose a CSV file before submitting the job!', "error");
       return;
     }
 
+    // Reset error message
+    setFileError('');
+
     // First, send job specification to backend
     pollingIntervalID = setInterval(pollBackend, 2000);
+    addLog('Submitting job and starting polling...', "info");
   };
 
   const pollBackend = () => {
     // If we have never talked to the backend
-    // we ask for a session token
     if (!token) {
       fetch(`${BASE_URL}:${CORE_PORT}/api/fetchtoken`)
         .then(response => response.json())
         .then(response => { 
           token = response["token"];
-          alert(`Session token: ${token}`); 
+          addLog(`Session token: ${token}`, "info");
         });
     } else {
       // With our session token we can fetch the status of our training job
-      // and use that status to decide what to do
       fetch(`${BASE_URL}:${CORE_PORT}/api/pollstatus/?token=${token}`)
         .then(response => response.json())
         .then(response => { 
           lastStatus = response["status"];
           handleStatus(lastStatus);
-          alert(`Status: ${lastStatus}`); 
+          addLog(`Status: ${lastStatus}`, "info");
         });
     }
   };
 
   const handleStatus = (lastStatus) => {
     // There are steps of the process where we need to do something
-    // We check for those statuses and call the correct logic
     if (lastStatus === "PENDING_JOB") {
       send_job(); // Send the job to the backend
     } else if (lastStatus === "PENDING_DATA_TRANSFER") {
@@ -61,7 +73,6 @@ const RunJob = ({ jobSpecification, dataFile, onBack }) => {
   };
 
   const send_job = () => {
-    // In the body we supply the session token and the specification
     const body = JSON.stringify({
       "session_token": token,
       "job_spec": jobSpec
@@ -73,16 +84,16 @@ const RunJob = ({ jobSpecification, dataFile, onBack }) => {
       method: 'POST',
       headers: headers,
       body: body
-    });
+    })
+      .then(() => addLog('Job submitted to backend.', "success"));
   };
 
   const send_data = () => {
-    // First, we have to ask the controller what port we can talk to the trainer on
     fetch(`${BASE_URL}:${CORE_PORT}/api/getworkerport/?token=${token}`)
       .then(response => response.json())
       .then(response => {
         workerPort = response["workerPort"];
-        alert(`WorkerPort: ${workerPort}`);
+        addLog(`WorkerPort: ${workerPort}`, "info");
 
         // Create a FormData to send CSV content as text
         const formData = new FormData();
@@ -90,7 +101,6 @@ const RunJob = ({ jobSpecification, dataFile, onBack }) => {
         // Read the CSV file as text (using FileReader)
         const reader = new FileReader();
         reader.onload = function(event) {
-          // Append the CSV file content as text to the form data
           formData.append("data_file", event.target.result);
         
           // Send the request with multipart/form-data, including the file content as text
@@ -100,15 +110,14 @@ const RunJob = ({ jobSpecification, dataFile, onBack }) => {
             body: formData,
           }).catch(error => {
             console.error('Error sending data:', error);
-            alert('Error sending data to the backend!');
+            addLog('Error sending data to the backend!', "error");
           });
         };
 
-        // Read the CSV file as text
         if (dataFile) {
           reader.readAsText(dataFile);
         } else {
-          alert("No file selected.");
+          addLog("No file selected.", "error");
         }
       });
   };
@@ -117,30 +126,45 @@ const RunJob = ({ jobSpecification, dataFile, onBack }) => {
     fetch(`${BASE_URL}:${workerPort}/api/getResults`)
       .then(response => response.json())
       .then(response => { 
-        alert(`Training Results: ${JSON.stringify(response)}`); // This should be the results
+        addLog(`Training Results: ${JSON.stringify(response)}`, "success");
       });
   };
 
   return (
-    <div style={{ padding: '20px' }}>
-      <h2>Run Job</h2>
-      <pre>{JSON.stringify(jobSpecification, null, 2)}</pre>
-      
-      {/* File name will be displayed instead of the file upload option */}
-      <div>
-        {dataFile ? (
-          <div><strong>File selected:</strong> {dataFile.name}</div>
-        ) : (
-          <div>No file selected</div>
-        )}
+    <div className="container" style={{ padding: '20px' }}>
+      <div className="run-job" style={{ flex: 1 }}>
+        <h2>Run Job</h2>
+        <pre>{JSON.stringify(jobSpecification, null, 2)}</pre>
+        
+        {/* File upload or selection */}
+        <div>
+          {dataFile ? (
+            <div><strong>File selected:</strong> {dataFile.name}</div>
+          ) : (
+            <div>No file selected</div>
+          )}
+        </div>
+
+        {/* Show error message if no file is selected */}
+        {fileError && <div style={{ color: 'red' }}>{fileError}</div>}
+
+        <button onClick={handleSubmitJob} style={{ marginTop: '10px' }}>
+          Submit Job
+        </button>
+        <button onClick={onBack} style={{ marginTop: '10px' }}>
+          Back to Pipeline Designer
+        </button>
       </div>
 
-      <button onClick={handleSubmitJob} style={{ marginTop: '10px' }}>
-        Submit Job
-      </button>
-      <button onClick={onBack} style={{ marginTop: '10px' }}>
-        Back to Pipeline Designer
-      </button>
+      {/* Logs Section */}
+      <div className="logs-panel">
+        <h3>Logs:</h3>
+        <div>
+          {logs.map((log, index) => (
+            <div key={index} className={`logs-message ${log.type}`}>{log.message}</div>
+          ))}
+        </div>
+      </div>
     </div>
   );
 };
