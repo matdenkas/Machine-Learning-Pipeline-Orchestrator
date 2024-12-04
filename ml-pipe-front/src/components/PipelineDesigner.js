@@ -26,7 +26,7 @@ const models = {
   RandomForestClassifier: {
     n_estimators: 100,
     criterion: "gini",
-    max_depth: null,
+    max_depth: 5,
     min_samples_split: 2,
     min_samples_leaf: 1,
     max_features: "sqrt",
@@ -38,7 +38,7 @@ const models = {
     max_depth: 5,
     min_samples_split: 2,
     min_samples_leaf: 1,
-    max_features: "auto",
+    max_features: 1.0,
     random_state: 42,
   },
   MLPClassifier: {
@@ -109,110 +109,143 @@ const PipelineDesigner = () => {
           validationYears: [2019],
           testingYears: [2020],
           algorithm: "RandomForestClassifier",
+          params: { ...models["RandomForestClassifier"] },
         };
       case "preprocess":
-        return { task: "Interpolation", args: { dataSeries: ["Revenue"], limit: 4, method: "linear" } };
+        return { task: "Interpolation", args: { ...preprocessingTasks["Interpolation"] } };
       default:
         return {};
     }
   };
 
-  // Generate JSON for the preview
-// Generate JSON for the preview
-const generateBackendJson = () => {
-  if (nodes.length === 0) {
-    alert("No nodes added to generate JSON.");
-    return;
-  }
-
-  const backendJson = {
-    data: [],
-    modelDefinitions: [],
-    preprocessingTasks: [],
-    edges: [],
-  };
-
-  nodes.forEach((node) => {
-    const config = nodeConfigs[node.id];
-    if (!config) {
-      console.warn(`Skipping node ${node.id}: Missing configuration.`);
-      return; // Skip nodes with missing configurations
-    }
-
-    if (node.type === "uploadData") {
-      // Only show the file name, not the file content
-      backendJson.data.push({
-        id: node.id,
-        type: "data",
-        file: fileName || "No file selected", // Only display the file name in preview
-      });
-    }
-
-    if (node.type === "modelNode") {
-      backendJson.modelDefinitions.push({
-        id: node.id,
-        mlFramework: "scikit-learn",
-        mlAlgorithm: "Random Forest",
-        predictionProblem: "regression",
-        target: config.target,
-        crossValidation: {
-          type: "year",
-          trainingYears: config.trainingYears || [],
-          validationYears: config.validationYears || [],
-          testingYears: config.testingYears || [],
-        },
-        modelParams: {
-          n_estimators: config.params?.n_estimators || 100,
-          max_depth: config.params?.max_depth || null,
-        },
-      });
-    }
-
-    if (node.type === "preprocess") {
-      backendJson.preprocessingTasks.push({
-        task: config.task,
-        args: config.args,
-      });
-    }
-  });
-
-  // Update the generated JSON without displaying file content
-  setGeneratedJson(JSON.stringify(backendJson, null, 2));
-};
-
-
-  // Prepare JSON for backend submission
-  const prepareSubmissionJson = () => {
-    const parsedJson = JSON.parse(generatedJson || "{}");
-    const submissionJson = {
-      modelDefinitions: parsedJson.modelDefinitions || [],
-      preprocessingTasks: parsedJson.preprocessingTasks || [],
-      // Here, dataFile will be the CSV content as text
-      dataFile: csvContent || "No file selected", // Send the CSV content as text
-    };
-    return submissionJson;
-  };
-
-  // Handle file selection and show the file name
-  const handleFileChange = (e) => {
-    const file = e.target.files[0];
-    setFileName(file ? file.name : "No file selected");
+  // Handle input changes for nodes
+  const handleInputChange = (key, value) => {
+    if (!selectedNode) return;
     setNodeConfigs((prev) => ({
       ...prev,
       [selectedNode.id]: {
         ...prev[selectedNode.id],
-        file: file ? file.name : "",
+        [key]: value,
       },
     }));
+  };
 
-    // Read the CSV file content as text
+  // Handle parameter changes for models
+  const handleParamChange = (paramKey, value) => {
+    if (!selectedNode) return;
+    setNodeConfigs((prev) => ({
+      ...prev,
+      [selectedNode.id]: {
+        ...prev[selectedNode.id],
+        params: {
+          ...prev[selectedNode.id]?.params,
+          [paramKey]: value,
+        },
+      },
+    }));
+  };
+
+  // Generate JSON for the preview
+  const generateBackendJson = () => {
+    if (nodes.length === 0) {
+      alert("No nodes added to generate JSON.");
+      return;
+    }
+
+    const backendJson = {
+      data: [],
+      modelDefinitions: [],
+      preprocessingTasks: [],
+      edges: [],
+    };
+
+    nodes.forEach((node) => {
+      const config = nodeConfigs[node.id];
+      if (!config) {
+        console.warn(`Skipping node ${node.id}: Missing configuration.`);
+        return; // Skip nodes with missing configurations
+      }
+
+      if (node.type === "uploadData") {
+        backendJson.data.push({
+          id: node.id,
+          type: "data",
+          file: fileName || "No file selected",
+        });
+      }
+
+      if (node.type === "modelNode") {
+        backendJson.modelDefinitions.push({
+          id: node.id,
+          mlFramework: "scikit-learn",
+          mlAlgorithm: config.algorithm.includes("RandomForest")
+            ? "Random Forest"
+            : "MLP",
+          predictionProblem: config.algorithm.includes("Classifier")
+            ? "classification"
+            : "regression",
+          target: config.target,
+          crossValidation: {
+            type: "year",
+            trainingYears: config.trainingYears || [],
+            validationYears: config.validationYears || [],
+            testingYears: config.testingYears || [],
+          },
+          modelParams: config.params || {},
+        });
+      }
+
+      if (node.type === "preprocess") {
+        backendJson.preprocessingTasks.push({
+          task: config.task,
+          args: config.args,
+        });
+      }
+    });
+
+    setGeneratedJson(JSON.stringify(backendJson, null, 2));
+  };
+
+  // Prepare JSON for backend submission
+  const prepareSubmissionJson = () => {
+    const parsedJson = JSON.parse(generatedJson || "{}");
+    return {
+      modelDefinitions: parsedJson.modelDefinitions || [],
+      preprocessingTasks: parsedJson.preprocessingTasks || [],
+      dataFile: csvContent || "No file selected",
+    };
+  };
+
+  // Handle file change
+  const handleFileChange = (e) => {
+    const file = e.target.files[0];
+    setFileName(file ? file.name : "No file selected");
     const reader = new FileReader();
     reader.onload = (e) => {
-      const content = e.target.result;
-      setCsvContent(content); // Set the content to the state
+      setCsvContent(e.target.result);
     };
-    reader.readAsText(file); // Read the CSV file as text
+    reader.readAsText(file);
     setDataFile(file);
+  };
+
+  // Ensure default parameters are loaded when selecting a node
+  const handleNodeClick = (event, node) => {
+    setSelectedNode(node);
+    if (node.type === "modelNode") {
+      setNodeConfigs((prev) => {
+        const currentConfig = prev[node.id] || {};
+        if (!currentConfig.params) {
+          return {
+            ...prev,
+            [node.id]: {
+              ...currentConfig,
+              params: { ...models[currentConfig.algorithm || "RandomForestClassifier"] },
+            },
+          };
+        }
+        return prev;
+      });
+    }
   };
 
   return (
@@ -229,11 +262,7 @@ const generateBackendJson = () => {
             <button onClick={generateBackendJson} style={{ marginTop: "10px" }}>
               Generate JSON
             </button>
-            <button onClick={() => setRunMode(true)} style={{ marginTop: "10px" }}>
-              Run Job Mode
-            </button>
           </div>
-
           <div style={{ flex: 1, padding: "20px" }}>
             <ReactFlow
               nodes={nodes}
@@ -241,27 +270,26 @@ const generateBackendJson = () => {
               onConnect={(params) => setEdges((eds) => addEdge(params, eds))}
               onNodesChange={(changes) => setNodes((nds) => applyNodeChanges(changes, nds))}
               onEdgesChange={(changes) => setEdges((eds) => applyEdgeChanges(changes, eds))}
-              onNodeClick={(event, node) => setSelectedNode(node)}
+              onNodeClick={handleNodeClick}
             >
               <MiniMap />
               <Controls />
               <Background />
             </ReactFlow>
           </div>
-
           <div style={{ width: "300px", padding: "20px", borderLeft: "1px solid #ccc" }}>
             <h3>Node Configuration</h3>
             {selectedNode?.type === "uploadData" && (
               <>
                 <h4>Upload Data Node</h4>
                 <label>Upload File:</label>
-                <input type="file" accept=".csv" onChange={handleFileChange} /> {/* Handle file selection */}
+                <input type="file" accept=".csv" onChange={handleFileChange} />
                 {fileName && <div><strong>File selected:</strong> {fileName}</div>}
               </>
             )}
             {selectedNode?.type === "modelNode" && (
               <>
-                <h4>Model Input & Definition Node</h4>
+                <h4>Model Node</h4>
                 <label>Target Variable:</label>
                 <input
                   type="text"
@@ -272,19 +300,34 @@ const generateBackendJson = () => {
                 <input
                   type="text"
                   value={nodeConfigs[selectedNode.id]?.trainingYears?.join(", ") || ""}
-                  onChange={(e) => handleInputChange("trainingYears", e.target.value)}
+                  onChange={(e) =>
+                    handleInputChange(
+                      "trainingYears",
+                      e.target.value.split(",").map((year) => year.trim())
+                    )
+                  }
                 />
                 <label>Validation Years:</label>
                 <input
                   type="text"
                   value={nodeConfigs[selectedNode.id]?.validationYears?.join(", ") || ""}
-                  onChange={(e) => handleInputChange("validationYears", e.target.value)}
+                  onChange={(e) =>
+                    handleInputChange(
+                      "validationYears",
+                      e.target.value.split(",").map((year) => year.trim())
+                    )
+                  }
                 />
                 <label>Testing Years:</label>
                 <input
                   type="text"
                   value={nodeConfigs[selectedNode.id]?.testingYears?.join(", ") || ""}
-                  onChange={(e) => handleInputChange("testingYears", e.target.value)}
+                  onChange={(e) =>
+                    handleInputChange(
+                      "testingYears",
+                      e.target.value.split(",").map((year) => year.trim())
+                    )
+                  }
                 />
                 <label>Algorithm:</label>
                 <select
@@ -349,7 +392,18 @@ const generateBackendJson = () => {
                     <input
                       type="text"
                       value={nodeConfigs[selectedNode.id]?.args[arg] || ""}
-                      onChange={(e) => handleInputChange(arg, e.target.value)}
+                      onChange={(e) =>
+                        setNodeConfigs((prev) => ({
+                          ...prev,
+                          [selectedNode.id]: {
+                            ...prev[selectedNode.id],
+                            args: {
+                              ...prev[selectedNode.id].args,
+                              [arg]: e.target.value,
+                            },
+                          },
+                        }))
+                      }
                     />
                   </div>
                 ))}
@@ -367,12 +421,26 @@ const generateBackendJson = () => {
             >
               {JSON.stringify(JSON.parse(generatedJson || "{}"), null, 2)}
             </pre>
+            <button
+              onClick={() => setRunMode(true)}
+              style={{
+                marginTop: "10px",
+                backgroundColor: "#4CAF50",
+                color: "white",
+                padding: "10px 20px",
+                border: "none",
+                borderRadius: "5px",
+                cursor: "pointer",
+              }}
+            >
+              Run Job
+            </button>
           </div>
         </>
       ) : (
         <RunJob
           jobSpecification={prepareSubmissionJson()}
-          dataFile={dataFile} // Pass the file here
+          dataFile={dataFile}
           onBack={() => setRunMode(false)}
         />
       )}
