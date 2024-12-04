@@ -1,3 +1,5 @@
+version: "3.9"
+
 services:
   core:
     container_name: ml-pipe-core
@@ -15,9 +17,10 @@ services:
     ports: 
       - "8000:80"
     volumes:
-      - /var/run/docker.sock:/var/run/docker.sock # This is required to hit our docker engine from inside the container
+      - /var/run/docker.sock:/var/run/docker.sock  # This allows Portainer to manage Docker
     extra_hosts:
       - "host.docker.internal:host-gateway"
+
   trainer:
     container_name: ml-pipe-trainer
     build:
@@ -28,3 +31,18 @@ services:
       - "8001:80"
     extra_hosts:
       - "host.docker.internal:host-gateway"
+
+  portainer:
+    image: portainer/portainer-ce:latest
+    container_name: portainer
+    restart: always
+    environment:
+      - "DOCKER_API_VERSION=1.41"
+    ports:
+      - "9000:9000"  # Port to access Portainer UI
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock  # Gives Portainer access to Docker socket
+      - portainer_data:/data  # Persistent storage for Portainer data
+
+volumes:
+  portainer_data:
